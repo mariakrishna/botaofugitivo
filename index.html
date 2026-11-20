@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Botão fugitivo</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f4ef; --text: #222; --btn: #d9534f; --btn-ok: #2e9e5b; --btn-text: #fff;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #1b1b1f; --text: #eee; --btn: #e0645f; --btn-ok: #3fb872; }
+  }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; overflow: hidden; }
+  h1 { position: absolute; top: 24px; left: 0; right: 0; text-align: center; font-size: 1rem; font-weight: 500; opacity: .7; margin: 0; padding: 0 16px; }
+  #btn {
+    position: absolute; left: calc(50% - 70px); top: calc(50% - 25px);
+    width: 140px; height: 50px; border: 0; border-radius: 10px;
+    background: var(--btn); color: var(--btn-text); font-size: 1rem; cursor: pointer;
+    transition: left .15s ease-out, top .15s ease-out, background .4s;
+  }
+  #btn.ok { background: var(--btn-ok); }
+  #msg { position: absolute; bottom: 40px; left: 0; right: 0; text-align: center; opacity: 0; transition: opacity .5s; padding: 0 16px; }
+  #msg.show { opacity: 1; }
+</style>
+</head>
+<body>
+<h1>Clique no botão (se conseguir)</h1>
+<button id="btn" type="button">Clique em mim</button>
+<div id="msg">Conseguiu! Ele só estava brincando.</div>
+
+<script>
+  var MAX = 7, escapes = 0, RADIUS = 90;
+  var COOLDOWN = 800, last = 0, mx = -999, my = -999;
+  var btn = document.getElementById('btn'), msg = document.getElementById('msg');
+
+  function jump() {
+    var now = Date.now();
+    if (now - last < COOLDOWN) return;
+    last = now;
+    var w = btn.offsetWidth, h = btn.offsetHeight, m = 16, x, y, tries = 0;
+    do {
+      x = m + Math.random() * (window.innerWidth - w - 2 * m);
+      y = 60 + Math.random() * (window.innerHeight - h - 120);
+      tries++;
+    } while (tries < 30 && Math.hypot(x + w / 2 - mx, y + h / 2 - my) < 250);
+    btn.style.left = x + 'px';
+    btn.style.top = y + 'px';
+    escapes++;
+  }
+
+  document.addEventListener('mousemove', function (e) {
+    mx = e.clientX; my = e.clientY;
+    if (escapes >= MAX) return;
+    var r = btn.getBoundingClientRect();
+    var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    if (Math.hypot(e.clientX - cx, e.clientY - cy) < RADIUS) jump();
+  });
+
+  btn.addEventListener('touchstart', function (e) {
+    if (escapes < MAX) { e.preventDefault(); jump(); }
+  }, { passive: false });
+
+  btn.addEventListener('click', function () {
+    if (escapes < MAX) return;
+    btn.classList.add('ok');
+    btn.textContent = 'Clicado!';
+    msg.classList.add('show');
+  });
+</script>
+</body>
+</html>
